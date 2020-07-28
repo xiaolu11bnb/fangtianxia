@@ -16,7 +16,7 @@ NEWSPIDER_MODULE = 'fangtianxia.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'fangtianxia (+http://www.yourdomain.com)'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -53,10 +53,10 @@ DOWNLOAD_DELAY = 1.2
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    # 'fangtianxia.middlewares.FangtianxiaDownloaderMiddleware': 543,
-    'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 300
-}
+# DOWNLOADER_MIDDLEWARES = {
+#     # 'fangtianxia.middlewares.FangtianxiaDownloaderMiddleware': 543,
+#     # 'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 300
+# }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -93,8 +93,17 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # MongoDB数据库设置
-MONGO_URI = '127.0.0.1'
+MONGO_URI = '106.52.249.156'
 MONGO_DB = 'FangTianXia'
 
 # IP代理API设置，本项目使用芝麻代理
 PROXY_URL = '填入你自己的'
+
+# scrapy_redis配置
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
+# Redis配置
+# REDIS_HOST = '119.45.187.43'
+# REDIS_PORT = 6379
+REDIS_URL = 'redis://@119.45.187.43:6379'

@@ -121,4 +121,4 @@ class FtxSpider(scrapy.Spider):
         if next_text and next_text == '下一页':
             next_url = response.urljoin(next_page.xpath('.//a/@href').get())
             yield scrapy.Request(url=next_url, callback=self.parse_esf,
-                                 meta={'info': (item['province'], item['city'])})
+                                meta={'info': (item['province'], item['city'])})
