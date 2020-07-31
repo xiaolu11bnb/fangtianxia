@@ -35,9 +35,9 @@ class FtxSpider(scrapy.Spider):
                     newhouse_url = 'https://' + url_city + '.newhouse.fang.com/house/s/'
                     esf_url = 'https://' + url_city + '.esf.fang.com'
                 # 新房链接
-                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)})
+                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)}, dont_filter=True)
                 # 二手房链接
-                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)})
+                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)}, dont_filter=True)
 
     def parse_newhouse(self, response):
         """新房列表解析函数"""
