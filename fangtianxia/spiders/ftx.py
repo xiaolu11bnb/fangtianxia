@@ -11,7 +11,7 @@ class FtxSpider(scrapy.Spider):
 
     def parse(self, response):
         """从官网下的所有城市入手，获取各城市url，并构建各城市新房和二手房链接"""
-        trs = response.xpath('//div[@class="outCont"]//tr')[:-1]   # 过滤掉海外城市
+        trs = response.xpath('//div[@class="outCont"]//tr')[:-1]  # 过滤掉海外城市
         province = None
         for tr in trs:
             tds = tr.xpath('.//td[not(@class)]')
@@ -35,9 +35,11 @@ class FtxSpider(scrapy.Spider):
                     newhouse_url = 'https://' + url_city + '.newhouse.fang.com/house/s/'
                     esf_url = 'https://' + url_city + '.esf.fang.com'
                 # 新房链接
-                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)}, dont_filter=True)
+                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)},
+                                     dont_filter=True)
                 # 二手房链接
-                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)}, dont_filter=True)
+                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)},
+                                     dont_filter=True)
 
     def parse_newhouse(self, response):
         """新房列表解析函数"""
@@ -47,12 +49,14 @@ class FtxSpider(scrapy.Spider):
         item['province'], item['city'] = response.meta.get('info')
         lis = response.xpath('//div[contains(@class,"nl_con")]/ul/li[contains(@id,"lp_")]')
         for li in lis:
+            item['_id'] = int(li.xpath('./@id').get().replace("lp_", ""))
             # 小区名称
             item['name'] = li.xpath('.//div[@class="nlcd_name"]/a/text()').get().strip()
             # 户型，去除特殊字符、空白符，并转换为字符串
-            item['house_type'] = ','.join(list(filter(lambda x: re.match(r'\d', x), li.xpath('.//div[contains(@class,"house_type")]/a/text()').getall())))
+            item['house_type'] = ','.join(list(filter(lambda x: re.match(r'\d', x), li.xpath(
+                './/div[contains(@class,"house_type")]/a/text()').getall())))
             # 新房面积，同样去除一些特殊字符
-            item['area'] = re.sub(r'[－/]', '', ''.join(li.xpath('.//div[contains(@class,"house_type")]/text()').getall())).strip()
+            item['area'] = re.sub(r'[－/]', '', ''.join(li.xpath('.//div[contains(@class,"house_type")]/text()').getall())).strip().replace("㎡", "").replace("平米", "")
             # 详细地址
             item['address'] = li.xpath('.//div[@class="address"]/a/@title').get()
             # 行政区
@@ -64,7 +68,7 @@ class FtxSpider(scrapy.Spider):
             # 详情页链接
             item['origin_url'] = response.urljoin(li.xpath('.//div[@class="nlcd_name"]/a/@href').get())
             # 价格
-            item['price'] = re.sub(r'\s|广告', '', ''.join(li.xpath('.//div[@class="nhouse_price"]//text()').getall()))
+            item['price'] = re.sub(r'\s|广告', '', ''.join(li.xpath('.//div[@class="nhouse_price"]/span/text()').getall())).strip()
 
             yield item
 
@@ -72,7 +76,8 @@ class FtxSpider(scrapy.Spider):
         next_page = response.xpath('//div[@class="page"]//a[@class="next"]/@href').get()
         if next_page:
             next_url = response.urljoin(next_page)
-            yield scrapy.Request(url=next_url, callback=self.parse_newhouse, meta={'info': (item['province'], item['city'])})
+            yield scrapy.Request(url=next_url, callback=self.parse_newhouse,
+                                 meta={'info': (item['province'], item['city'])})
 
     def parse_esf(self, response):
         """二手房网页解析函数"""
@@ -82,21 +87,24 @@ class FtxSpider(scrapy.Spider):
         item['province'], item['city'] = response.meta.get('info')
         dls = response.xpath('//div[contains(@class,"shop_list")]/dl[@dataflag="bg"]')
         for dl in dls:
+            href = dl.xpath('.//dd/h4/a/@href').get()
+            item['_id'] = int(href.split('_')[-1].split('.')[0])
             # 介绍名，就是那一行唬人的一长串
             item['intro_name'] = dl.xpath('.//dd/h4/a/span/text()').get().strip()
             # 小区名称
             item['name'] = dl.xpath('.//dd/p[@class="add_shop"]/a/text()').get().strip()
             # 详情页链接
-            item['origin_url'] = response.urljoin(dl.xpath('.//dd/h4/a/@href').get())
+            item['origin_url'] = response.urljoin(href)
             # 获取房屋信息
-            house_infos = re.sub(r'[\s]', '', ''.join(dls[0].xpath('.//dd/p[@class="tel_shop"]//text()').getall())).split('|')
+            house_infos = re.sub(r'[\s]', '',
+                                 ''.join(dls[0].xpath('.//dd/p[@class="tel_shop"]//text()').getall())).split('|')
             for house_info in house_infos:
                 # 户型
                 if '室' in house_info:
                     item['house_type'] = house_info
                 # 面积
                 elif '㎡' in house_info:
-                    item['area'] = house_info
+                    item['area'] = float(house_info.replace("㎡", ""))
                 # 楼层
                 elif '层' in house_info:
                     item['floor'] = house_info
@@ -105,13 +113,13 @@ class FtxSpider(scrapy.Spider):
                     item['towards'] = house_info
                 # 建造时间
                 elif '年建' in house_info:
-                    item['year'] = house_info[:-2]
+                    item['year'] = int(house_info[:-2])
             # 详细地址
             item['address'] = dl.xpath('.//dd/p[@class="add_shop"]/span/text()').get()
             # 总价
-            item['price'] = ''.join(dl.xpath('.//dd[@class="price_right"]/span[1]//text()').getall())
+            item['price'] = float(''.join(dl.xpath('.//dd[@class="price_right"]/span[1]//text()').getall()).strip().replace("万", "").replace("$", ""))
             # 单价
-            item['unit'] = dl.xpath('.//dd[@class="price_right"]/span[2]/text()').get()
+            item['unit'] = float(dl.xpath('.//dd[@class="price_right"]/span[2]/text()').get().strip().replace("元/㎡", ""))
 
             yield item
 
@@ -121,4 +129,4 @@ class FtxSpider(scrapy.Spider):
         if next_text and next_text == '下一页':
             next_url = response.urljoin(next_page.xpath('.//a/@href').get())
             yield scrapy.Request(url=next_url, callback=self.parse_esf,
-                                meta={'info': (item['province'], item['city'])})
+                                 meta={'info': (item['province'], item['city'])})

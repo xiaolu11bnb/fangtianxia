@@ -10,6 +10,7 @@ import scrapy
 
 class NewHouseItem(scrapy.Item):
     """新房item"""
+    _id = scrapy.Field()                               # ID
     province = scrapy.Field()                          # 省份
     city = scrapy.Field()                              # 城市
     name = scrapy.Field()                              # 小区名字
@@ -24,6 +25,7 @@ class NewHouseItem(scrapy.Item):
 
 class ESFHouseItem(scrapy.Item):
     """二手房item"""
+    _id = scrapy.Field()                               # ID
     province = scrapy.Field()                          # 省份
     city = scrapy.Field()                              # 城市
     name = scrapy.Field()                              # 小区名字

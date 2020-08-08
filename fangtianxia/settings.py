@@ -93,26 +93,18 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # MongoDB数据库设置
-MONGO_URI = '106.52.249.156'
-MONGO_DB = 'FangTianXia'
+MONGO_URI = 'XXX'
+MONGO_DB = 'fangtianxia'
 
 # IP代理API设置，本项目使用芝麻代理
 PROXY_URL = '填入你自己的'
 
-# scrapy_redis_bloomfilter配置
-SCHEDULER = "scrapy_redis_bloomfilter.scheduler.Scheduler"
-DUPEFILTER_CLASS = "scrapy_redis_bloomfilter.dupefilter.RFPDupeFilter"
+# scrapy_redis配置
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Redis配置
-# REDIS_HOST = '119.45.187.43'
-# REDIS_PORT = 6379
-REDIS_URL = 'redis://@119.45.187.43:6379'
-
-# Number of Hash Functions to use, defaults to 6
-BLOOMFILTER_HASH_NUMBER = 6
-
-# Redis Memory Bit of Bloomfilter Usage, 30 means 2^30 = 128MB, defaults to 30
-BLOOMFILTER_BIT = 30
+REDIS_URL = 'XXX'
 
 # Persist
 SCHEDULER_PERSIST = True
