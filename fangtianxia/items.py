@@ -21,6 +21,8 @@ class NewHouseItem(scrapy.Item):
     district = scrapy.Field()                          # 行政区
     sale = scrapy.Field()                              # 是否在售
     origin_url = scrapy.Field()                        # 详情页链接
+    gather_time = scrapy.Field()                       # 采集时间
+    # update_time = scrapy.Field()                       # 入库时间
 
 
 class ESFHouseItem(scrapy.Item):
@@ -39,3 +41,5 @@ class ESFHouseItem(scrapy.Item):
     price = scrapy.Field()                             # 总价
     unit = scrapy.Field()                              # 单价
     origin_url = scrapy.Field()                        # 详情页链接
+    gather_time = scrapy.Field()                       # 采集时间
+    # update_time = scrapy.Field()                       # 入库时间

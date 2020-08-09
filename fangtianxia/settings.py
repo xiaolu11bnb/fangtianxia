@@ -8,6 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import random
 
 BOT_NAME = 'fangtianxia'
 
@@ -22,13 +23,14 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; rv:76.0) Gecko/20100101 Firefox/76.0
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 # 设置下载延时，减少IP被封几率
-DOWNLOAD_DELAY = 1.2
+DOWNLOAD_DELAY = random.random() * 0.8
+
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -94,7 +96,7 @@ ITEM_PIPELINES = {
 
 # MongoDB数据库设置
 MONGO_URI = 'XXX'
-MONGO_DB = 'fangtianxia'
+MONGO_DB = 'FangTianXia'
 
 # IP代理API设置，本项目使用芝麻代理
 PROXY_URL = '填入你自己的'

@@ -32,7 +32,7 @@ class MongoPipeline(object):
     def process_item(self, item, spider):
         name = item.__class__.__name__
         data = dict(item)
-        self.db[name].update({"_id": data['_id']}, {"$set": data})
+        self.db[name].update_one({"_id": data['_id']}, {"$set": data}, upsert=True)
         return item
 
     def close_spider(self, spider):

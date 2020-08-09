@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import datetime
+
 import scrapy
 from fangtianxia.items import NewHouseItem, ESFHouseItem
 
@@ -35,11 +37,9 @@ class FtxSpider(scrapy.Spider):
                     newhouse_url = 'https://' + url_city + '.newhouse.fang.com/house/s/'
                     esf_url = 'https://' + url_city + '.esf.fang.com'
                 # 新房链接
-                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)},
-                                     dont_filter=True)
+                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)}, dont_filter=True)
                 # 二手房链接
-                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)},
-                                     dont_filter=True)
+                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)}, dont_filter=True)
 
     def parse_newhouse(self, response):
         """新房列表解析函数"""
@@ -49,6 +49,7 @@ class FtxSpider(scrapy.Spider):
         item['province'], item['city'] = response.meta.get('info')
         lis = response.xpath('//div[contains(@class,"nl_con")]/ul/li[contains(@id,"lp_")]')
         for li in lis:
+            # 商品ID
             item['_id'] = int(li.xpath('./@id').get().replace("lp_", ""))
             # 小区名称
             item['name'] = li.xpath('.//div[@class="nlcd_name"]/a/text()').get().strip()
@@ -68,7 +69,9 @@ class FtxSpider(scrapy.Spider):
             # 详情页链接
             item['origin_url'] = response.urljoin(li.xpath('.//div[@class="nlcd_name"]/a/@href').get())
             # 价格
-            item['price'] = re.sub(r'\s|广告', '', ''.join(li.xpath('.//div[@class="nhouse_price"]/span/text()').getall())).strip()
+            item['price'] = re.sub(r'\s|广告', '', ''.join(li.xpath('.//div[@class="nhouse_price"]//text()').getall())).strip()
+            # 采集时间
+            item['gather_time'] = datetime.now()
 
             yield item
 
@@ -76,8 +79,7 @@ class FtxSpider(scrapy.Spider):
         next_page = response.xpath('//div[@class="page"]//a[@class="next"]/@href').get()
         if next_page:
             next_url = response.urljoin(next_page)
-            yield scrapy.Request(url=next_url, callback=self.parse_newhouse,
-                                 meta={'info': (item['province'], item['city'])})
+            yield scrapy.Request(url=next_url, callback=self.parse_newhouse, meta={'info': (item['province'], item['city'])})
 
     def parse_esf(self, response):
         """二手房网页解析函数"""
@@ -88,6 +90,7 @@ class FtxSpider(scrapy.Spider):
         dls = response.xpath('//div[contains(@class,"shop_list")]/dl[@dataflag="bg"]')
         for dl in dls:
             href = dl.xpath('.//dd/h4/a/@href').get()
+            # 商品ID
             item['_id'] = int(href.split('_')[-1].split('.')[0])
             # 介绍名，就是那一行唬人的一长串
             item['intro_name'] = dl.xpath('.//dd/h4/a/span/text()').get().strip()
@@ -120,6 +123,8 @@ class FtxSpider(scrapy.Spider):
             item['price'] = float(''.join(dl.xpath('.//dd[@class="price_right"]/span[1]//text()').getall()).strip().replace("万", "").replace("$", ""))
             # 单价
             item['unit'] = float(dl.xpath('.//dd[@class="price_right"]/span[2]/text()').get().strip().replace("元/㎡", ""))
+            # 采集时间
+            item['gather_time'] = datetime.now()
 
             yield item
 
@@ -128,5 +133,4 @@ class FtxSpider(scrapy.Spider):
         next_text = next_page.xpath('.//a/text()').get()
         if next_text and next_text == '下一页':
             next_url = response.urljoin(next_page.xpath('.//a/@href').get())
-            yield scrapy.Request(url=next_url, callback=self.parse_esf,
-                                 meta={'info': (item['province'], item['city'])})
+            yield scrapy.Request(url=next_url, callback=self.parse_esf, meta={'info': (item['province'], item['city'])})
