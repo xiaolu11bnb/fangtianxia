@@ -99,8 +99,7 @@ class FtxSpider(scrapy.Spider):
             # 详情页链接
             item['origin_url'] = response.urljoin(href)
             # 获取房屋信息
-            house_infos = re.sub(r'[\s]', '',
-                                 ''.join(dls[0].xpath('.//dd/p[@class="tel_shop"]//text()').getall())).split('|')
+            house_infos = re.sub(r'[\s]', '', ''.join(dl.xpath('.//dd/p[@class="tel_shop"]//text()').getall())).split('|')
             for house_info in house_infos:
                 # 户型
                 if '室' in house_info:
@@ -108,6 +107,9 @@ class FtxSpider(scrapy.Spider):
                 # 面积
                 elif '㎡' in house_info:
                     item['area'] = float(house_info.replace("㎡", ""))
+                # 香港澳门面积
+                elif '呎' in house_info:
+                    item['area'] = house_info
                 # 楼层
                 elif '层' in house_info:
                     item['floor'] = house_info
@@ -120,9 +122,18 @@ class FtxSpider(scrapy.Spider):
             # 详细地址
             item['address'] = dl.xpath('.//dd/p[@class="add_shop"]/span/text()').get()
             # 总价
-            item['price'] = float(''.join(dl.xpath('.//dd[@class="price_right"]/span[1]//text()').getall()).strip().replace("万", "").replace("$", ""))
+            price = ''.join(dl.xpath('.//dd[@class="price_right"]/span[1]//text()').getall()).strip()
+            if '$' in price:  # 港澳价格
+                item['price'] = price
+            else:             # 国内价格
+                item['price'] = float(price.replace("万", "").replace("$", ""))
+
             # 单价
-            item['unit'] = float(dl.xpath('.//dd[@class="price_right"]/span[2]/text()').get().strip().replace("元/㎡", ""))
+            unit = dl.xpath('.//dd[@class="price_right"]/span[2]/text()').get().strip()
+            if '$' in unit:  # 港澳价格
+                item['unit'] = unit
+            else:             # 国内价格
+                item['unit'] = float(unit.replace("元/㎡", "").replace("$", ""))
             # 采集时间
             item['gather_time'] = datetime.now()
 
