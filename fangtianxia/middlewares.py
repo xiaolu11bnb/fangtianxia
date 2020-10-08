@@ -147,12 +147,13 @@ class IPProxyDownloadMiddleware:
         # scrapy底层为twisted异步框架，更新IP代理时设置锁，防止浪费IP代理
         self.lock.acquire()
         if not self.current_proxy or self.current_proxy.is_expired or self.current_proxy.balcked:
-            text = requests.get(url=PROXY_URL).text
-            result = json.loads(text)
-            if result['data']:
-                data = result['data'][0]
-                proxy_model = ProxyModel(data)
-                self.current_proxy = proxy_model
+            if PROXY_URL:
+                text = requests.get(url=PROXY_URL).text
+                result = json.loads(text)
+                if result['data']:
+                    data = result['data'][0]
+                    proxy_model = ProxyModel(data)
+                    self.current_proxy = proxy_model
 
         # 更新IP代理之后释放锁
         self.lock.release()

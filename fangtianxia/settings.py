@@ -70,7 +70,8 @@ DOWNLOAD_DELAY = random.random() * 0.8
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'fangtianxia.pipelines.FangtianxiaPipeline': 300,
-    'fangtianxia.pipelines.MongoPipeline': 300,
+    'fangtianxia.pipelines.CsvPipeline': 300,
+    # 'fangtianxia.pipelines.MongoPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -99,7 +100,7 @@ MONGO_URI = 'XXX'
 MONGO_DB = 'FangTianXia'
 
 # IP代理API设置，本项目使用芝麻代理
-PROXY_URL = '填入你自己的'
+PROXY_URL = ''
 
 # scrapy_redis配置
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"

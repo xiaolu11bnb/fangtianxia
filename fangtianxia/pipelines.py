@@ -4,7 +4,9 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-import pymongo
+# import pymongo
+import codecs
+import csv
 
 
 class FangtianxiaPipeline(object):
@@ -12,6 +14,27 @@ class FangtianxiaPipeline(object):
         return item
 
 
+# 保存到CSV文件中
+class CsvPipeline(object):
+
+    def __init__(self):
+        self.file = codecs.open('data.csv', 'w', encoding='utf_8_sig')
+
+    def process_item(self, item, spider):
+        fieldnames = ['_id', 'province', 'city', 'name', 'price', 'house_type',
+                      'area', 'address', 'district', 'sale', 'origin_url', 'jzmj', 'lpyh', 'kpsj', 'xszt', 'jfsj',
+                      'xmts', 'zxdh', 'tcw', 'ldzs', 'rjl', 'zxzk', 'lczk', 'wylb', 'hxwz', 'zdmj', 'jzlb', 'cqnx',
+                      'zlhx', 'ysxkz', 'wyf', 'kfs', 'wygs', 'wyfms', 'lhl', 'zhs']
+        w = csv.DictWriter(self.file, fieldnames=fieldnames, quotechar='"', quoting=csv.QUOTE_ALL)
+        # w.writeheader()
+        w.writerow(item)
+        return item
+
+    def close_spider(self, spider):
+        self.file.close()
+
+
+'''
 class MongoPipeline(object):
     """MongoDB管道"""
     def __init__(self, mongo_uri, mongo_db):
@@ -38,3 +61,4 @@ class MongoPipeline(object):
     def close_spider(self, spider):
         self.client.close()
 
+'''

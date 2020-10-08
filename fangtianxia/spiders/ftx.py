@@ -37,49 +37,94 @@ class FtxSpider(scrapy.Spider):
                     newhouse_url = 'https://' + url_city + '.newhouse.fang.com/house/s/'
                     esf_url = 'https://' + url_city + '.esf.fang.com'
                 # 新房链接
-                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse, meta={'info': (province, city)}, dont_filter=True)
+                yield scrapy.Request(url=newhouse_url, callback=self.parse_newhouse_list, meta={'info': (province, city)}, dont_filter=True)
                 # 二手房链接
-                yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)}, dont_filter=True)
+                # yield scrapy.Request(url=esf_url, callback=self.parse_esf, meta={'info': (province, city)}, dont_filter=True)
 
     def parse_newhouse(self, response):
-        """新房列表解析函数"""
+        province, city, _id, name, price, url = response.meta.get('info')
         # 实例化新房item
         item = NewHouseItem()
+        lis = response.xpath('//div[contains(@class,"main-item")]/ul[contains(@class, "list")]/li')
+        v = {}
+        for li in lis:
+            divs = li.xpath('./div')
+            tmp_k = ''
+            for i in range(0, 2):
+                txt = ''.join([t.strip() for t in divs[i].xpath('.//text()').getall()])
+                if i == 0:
+                    tmp_k = txt
+                else:
+                    v[tmp_k] = txt
+                    if tmp_k == '项目特色：':
+                        tmp_lis = divs[i].xpath('./li')
+                        for tmp_li in tmp_lis:
+                            tmp_divs = tmp_li.xpath('./div')
+                            tmp_k = ''
+                            for ii in range(0, 2):
+                                txt = ''.join([t.strip() for t in tmp_divs[ii].xpath('.//text()').getall()])
+                                if ii == 0:
+                                    tmp_k = txt
+                                else:
+                                    v[tmp_k] = txt
+                                    # print(tmp_k, txt)
+        # print(v)
+        item['_id'] = _id
+        item['origin_url'] = url
+        item['province'] = province
+        item['city'] = city
+        item['name'] = name
+        item['price'] = price
+        item['address'] = v.get('售楼地址：', '')
+        item['wylb'] = v.get('物业类别：', '')
+        # item['xmts'] = v.get('项目特色：', '')
+        item['jzlb'] = v.get('建筑类别：', '')
+        item['zxzk'] = v.get('装修状况：', '')
+        item['cqnx'] = v.get('产权年限：', '')
+        item['hxwz'] = v.get('环线位置：', '')
+        item['kfs'] = v.get('开发商：', '')
+        item['xszt'] = v.get('销售状态：', '')
+        item['lpyh'] = v.get('楼盘优惠：', '')
+        item['kpsj'] = v.get('开盘时间：', '')
+        item['jfsj'] = v.get('交房时间：', '')
+        item['zxdh'] = v.get('咨询电话：', '')
+        item['zlhx'] = v.get('主力户型：', '')
+        item['ysxkz'] = v.get('预售许可证：', '')
+        item['zdmj'] = v.get('占地面积：', '')
+        item['jzmj'] = v.get('建筑面积：', '')
+        item['rjl'] = v.get('容积率：', '')
+        item['lhl'] = v.get('绿化率：', '')
+        item['tcw'] = v.get('停车位：', '')
+        item['ldzs'] = v.get('楼栋总数：', '')
+        item['zhs'] = v.get('总户数：', '')
+        item['wygs'] = v.get('物业公司：', '')
+        item['wyf'] = v.get('物业费：', '')
+        item['wyfms'] = v.get('物业费描述：', '')
+        item['lczk'] = v.get('楼层状况：', '')
+        yield item
+
+    def parse_newhouse_list(self, response):
+        """新房列表解析函数"""
         # 获取上一步得到的省份和城市信息
-        item['province'], item['city'] = response.meta.get('info')
+        province, city = response.meta.get('info')
         lis = response.xpath('//div[contains(@class,"nl_con")]/ul/li[contains(@id,"lp_")]')
         for li in lis:
-            # 商品ID
-            item['_id'] = int(li.xpath('./@id').get().replace("lp_", ""))
-            # 小区名称
-            item['name'] = li.xpath('.//div[@class="nlcd_name"]/a/text()').get().strip()
-            # 户型，去除特殊字符、空白符，并转换为字符串
-            item['house_type'] = ','.join(list(filter(lambda x: re.match(r'\d', x), li.xpath(
-                './/div[contains(@class,"house_type")]/a/text()').getall())))
-            # 新房面积，同样去除一些特殊字符
-            item['area'] = re.sub(r'[－/]', '', ''.join(li.xpath('.//div[contains(@class,"house_type")]/text()').getall())).strip().replace("㎡", "").replace("平米", "")
-            # 详细地址
-            item['address'] = li.xpath('.//div[@class="address"]/a/@title').get()
-            # 行政区
-            district = re.search(r'.*\[(.+)\].*', ''.join(li.xpath('.//div[@class="address"]/a//text()').getall()))
-            if district:
-                item['district'] = district.group(1)
-            # 是否在售
-            item['sale'] = li.xpath('.//div[contains(@class,"fangyuan")]/span/text()').get()
-            # 详情页链接
-            item['origin_url'] = response.urljoin(li.xpath('.//div[@class="nlcd_name"]/a/@href').get())
-            # 价格
-            item['price'] = re.sub(r'\s|广告', '', ''.join(li.xpath('.//div[@class="nhouse_price"]//text()').getall())).strip()
-            # 采集时间
-            item['gather_time'] = datetime.now()
-
-            yield item
+            _id = int(li.xpath('./@id').get().replace("lp_", ""))
+            name = li.xpath('.//div[@class="nlcd_name"]/a/text()').get().strip()
+            url = response.urljoin(li.xpath('.//div[@class="nlcd_name"]/a/@href').get())
+            price = re.sub(r'\s|广告', '',''.join(li.xpath('.//div[@class="nhouse_price"]//text()').getall())).strip()
+            if str(url).find('?') != -1:
+                url = url[:str(url).find('?')]
+            url = '{}house/{}/housedetail.htm'.format(url, _id)
+            print(url)
+            yield scrapy.Request(url=url, callback=self.parse_newhouse, meta={'info': (province, city, _id, name, price, url)},
+                                 dont_filter=True)
 
         # 自动获取下一页
         next_page = response.xpath('//div[@class="page"]//a[@class="next"]/@href').get()
         if next_page:
             next_url = response.urljoin(next_page)
-            yield scrapy.Request(url=next_url, callback=self.parse_newhouse, meta={'info': (item['province'], item['city'])})
+            yield scrapy.Request(url=next_url, callback=self.parse_newhouse, meta={'info': (province, city)})
 
     def parse_esf(self, response):
         """二手房网页解析函数"""
